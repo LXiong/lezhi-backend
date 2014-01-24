@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>#{get 'title' /}</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/main.css'}">
+        #{get 'moreStyles' /}
+        <link rel="shortcut icon" type="image/png" href="@{'/public/images/favicon.png'}">
+        <script language="javascript" type="text/javascript" src="http://static.bshare.cn/js/libs/jquery-1.4.2.min.js"></script>
+        #{get 'moreScripts' /}
+    </head>
+    <body>
+    <div style="float: right; margin-right: 20px;">
+     	<a href="@{Secure.logout()}">Log out</a>
+    </div>
+    	<div id="message" style="float: left;"></div>
+    	<div style="clear: both;"></div>
+    	<script type="text/javascript">
+    		function showMessage(message){
+    			if(message) {
+    				$("#message").text(message);
+    			} else {
+    				$("#message").text("");
+    			}
+    		}
+		</script>
+        #{doLayout /}
+    </body>
+</html>

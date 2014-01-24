@@ -1,0 +1,239 @@
+#{extends 'main.html' /} 
+#{set title:'Role Manager' /}
+<style>
+<!--
+li label {
+	display: block;
+	width: 250px;
+}
+
+ul {
+	list-style: none;
+}
+
+#tablePlaceholder td {
+	width:80px;
+	text-overflow:ellipsis;overflow:hidden;white-space: nowrap;
+}
+#tablePlaceholder.tableTitle {
+	width: 30%;
+}
+#tablePlaceholder {
+	width:100%;
+	table-layout: fixed;
+}
+
+.tdnormal{
+	width:10%;
+}
+.tdshort{
+	width:6%;
+}
+
+#editPanel input {
+	width:80%;
+}
+-->
+</style>
+<div>
+	<div id="searchPanel">
+	<h2>Show All</h2>
+	<button id="showAll">Show All</button>
+	<h2>Refresh Roles</h2>
+	<button id="refresh">Refresh</button>
+	</div>
+	<div style="clear: both;"></div>
+	<h3>Searching Result</h3>
+	<div id="searchResult">
+		<table id="tablePlaceholder" border="1">
+		</table>
+	</div>
+	
+	<div id="roleEditPanel">
+	<!-- TODO -->
+	</div>
+	
+	<div id="editPanel" >
+		<h2>Create Or Update Role</h2>
+		<table border="1">
+			<tr>
+				<th>ID:</th>
+				<td><span id="role_id"></span>
+				</td>
+			</tr>
+			<tr>
+				<th>ROLE NAME:</th>
+				<td><input id="role_name" type="text" />
+				</td>
+			</tr>
+			<tr>
+				<th>ROLE DESCRIPTION:</th>
+				<td><input id="role_description" type="text" />
+			</td>
+			</tr>
+			<tr>
+				<th>INHERITED ROLE IDs:</th>
+				<td><input id="role_inherited_role_ids" type="text" />
+				</td>
+			</tr>
+			<tr>
+				<td><button id="btnReset">Reset</button>
+				</td>
+				<td><button id="btnSubmit">Submit</button>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+</div>
+<script type="text/javascript">
+	var queryParameters = {};
+	var searchResult;
+	$(function() {
+		$("#showAll").click(function() {
+			clearTableAndPagination();
+			queryParameters = {};
+			showMessage("Loading...");
+			$.get("/jianghu-admin-backend/role/showAll", queryParameters, callback, "json");
+		});
+		
+		
+		$("#refresh").click(function() {
+			//clearTableAndPagination();
+			queryParameters = {};
+			showMessage("Loading...");
+			$.get("/jianghu-admin-backend/role/refresh", queryParameters, callback2, "json");
+		});
+		$("#btnReset").click(function() {
+			resetEditPanel();
+		});
+		$("#btnSubmit").click(
+				function() {
+					var role = getAndvalidateRole();
+					if (role == null) {
+						return;
+					}
+					showMessage("Waiting...");
+					if (role["role.id"]) {
+						$.post("/jianghu-admin-backend/role/updateRole", getAndvalidateRole(),
+								updateOrCreateCallback, "json");
+					} else {
+						$.post("/jianghu-admin-backend/role/createRole", getAndvalidateRole(),
+								updateOrCreateCallback, "json");
+					}
+				});
+	});
+
+	function updateOrCreateCallback(result) {
+		showMessage();
+		try {
+			if (!result || !result.result) {
+				alert("Update or Create Failed")
+			} else {
+				alert("Update or Create Successful")
+			}
+		} catch (e) {
+			alert(e);
+		}
+	}
+
+	function callback(result) {
+		showMessage();
+		try {
+			if (!result || !result.length || result.length == 0) {
+				alert("No More Role");
+				return;
+			}
+			searchResult = result;
+			buildResultTable(result);
+		} catch (e) {
+			alert(e);
+		}
+	}
+	
+	function callback2(result) {
+		showMessage();
+		try {
+			if (result && result.result) {
+				alert("Refresh Successful");
+			} else {
+				alert("Refresh Failed");
+			}
+		} catch (e) {
+			alert(e);
+		}
+	}
+
+	function getAndvalidateRole() {
+		var role = {};
+		role["role.id"] = $("#role_id").html().trim();
+		role["role.name"] = $("#role_name").val();
+		role["role.description"] = $("#role_description").val();
+		role["role.inheritedRoleIds"] = $("#role_inherited_role_ids").val();
+		if (!role["role.name"]) {
+			alert("Require User.name");
+			return null;
+		}
+		return role;
+	}
+
+	function resetEditPanel() {
+		$("#role_id").html("");
+		$("#role_name").val("");
+		$("#role_description").val("");
+		$("#role_inherited_role_ids").val("");
+	}
+
+	function clearTableAndPagination() {
+		var table = $("#tablePlaceholder");
+		table.html("");
+	}
+
+	function buildResultTable(roles) {
+		if (!roles || !roles.length) {
+			return;
+		}
+		var table = $("#tablePlaceholder");
+		var th = "<tr><th class='tdshort'>EDIT</th><th class='tdshort'>ID</th><th class='tdnormal'>ROLE NAME</th><th class='tdnormal'>DESCRIPTION</th><th class='tdnormal'>INHERITED ROLE IDs</th></tr>";
+		table.append(th);
+		for ( var i = 0; i < roles.length; i++) {
+			var role = roles[i];
+
+
+		var tr = "<tr><td><button class='edit' rowid='" + i +  "'>edit</button><button class='delete' roleId='" + role.id + "'>delete</button></td>"
+					+ "<td>"
+					+ role.id
+					+ "</td><td>"
+					+ role.name
+					+ "</td><td>"
+					+ role.description
+					+ "</td><td>"
+					+ (role.inheritedRoleIds || "")
+					+ "</td>";
+			table.append(tr);
+		}
+
+		$(".edit").click(function() {
+			var id = $(this).attr("rowid");
+			buildEditPanel(id);
+		});
+		
+		$(".delete").click(function(){
+			var roleId = $(this).attr("roleId");
+			$.get("/jianghu-admin-backend/role/deleteRole",{"roleId":roleId},updateOrCreateCallback, "json");
+		});
+		
+	}
+
+	function buildEditPanel(id) {
+		if (searchResult && searchResult.length) {
+			var role = searchResult[id];
+			
+			$("#role_id").html(role.id);
+			$("#role_name").val(role.name);
+			$("#role_description").val(role.description);
+			$("#role_inherited_role_ids").val(role.inheritedRoleIds);
+		}
+	};
+
+</script>

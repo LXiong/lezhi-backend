@@ -1,0 +1,10 @@
+service01@buzzinate.com	sina01
+service02@buzzinate.com	sina02
+service03@buzzinate.com	sina03
+service04@buzzinate.com	sina04
+service05@buzzinate.com	sina05
+service06@buzzinate.com	sina06
+service07@buzzinate.com	sina07
+service08@buzzinate.com	sina08
+service09@buzzinate.com	sina09
+service10@buzzinate.com	sina10

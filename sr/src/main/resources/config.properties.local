@@ -1,0 +1,8 @@
+# mongodb url replset url
+mongodb.url = mongodb://127.0.0.1
+elasticsearch.hosts = 127.0.0.1
+
+lda.model.root = D:/project/model/ldamodel
+
+vertical.crawl.startUrl = http://eladies.sina.com.cn
+vertical.crawl.category = 8

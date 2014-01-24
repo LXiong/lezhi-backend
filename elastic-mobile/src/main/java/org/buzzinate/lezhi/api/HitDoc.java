@@ -1,0 +1,27 @@
+package org.buzzinate.lezhi.api;
+
+public class HitDoc {
+	public long id;
+	public String url;
+	public String title;
+	public String signature;
+	public String thumbnail;
+	public long lastModified;
+	public float score;
+	
+	public HitDoc() {}
+	
+	public HitDoc(long id, String url, String title, String signature, String thumbnail, long lastModified) {
+		this.id = id;
+		this.url = url;
+		this.title = title;
+		this.signature = signature;
+		this.thumbnail = thumbnail;
+		this.lastModified = lastModified;
+	}
+
+	@Override
+	public String toString() {
+		return url + " /" + score + " [title=" + title + ", thumbnail=" + thumbnail + ", lastModified=" + lastModified + "]";
+	}
+}

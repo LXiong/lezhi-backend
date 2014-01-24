@@ -1,0 +1,152 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.buzzinate</groupId>
+	<artifactId>jianghu-sr</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>social recommender</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.target>1.6</maven.compiler.target>
+		<maven.compiler.source>1.6</maven.compiler.source>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.buzzinate</groupId>
+			<artifactId>elastic-mobile</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.morphia</groupId>
+			<artifactId>morphia</artifactId>
+			<version>1.00-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
+			<version>2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.buzzinate</groupId>
+			<artifactId>common</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.buzzinate</groupId>
+			<artifactId>buzznlp</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-httpclient</groupId>
+			<artifactId>commons-httpclient</artifactId>
+			<version>3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.16</version>
+		</dependency>
+		<dependency>
+			<groupId>rome</groupId>
+			<artifactId>rome</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.cybozu</groupId>
+			<artifactId>language-detector</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.mortennobel</groupId>
+			<artifactId>java-image-scaling</artifactId>
+			<version>0.8.5</version>
+		</dependency>
+		<dependency>
+			<groupId>com.buzzinate</groupId>
+			<artifactId>image-util</artifactId>
+			<version>0.1</version>
+		</dependency>
+
+		<!-- mvn install:install-file -DgroupId=com.weibo -DartifactId=weibo4j_oauth2 
+			-Dversion=1.0 -Dpackaging=jar -Dfile=weibo4j_oauth2.jar -->
+		<dependency>
+			<groupId>com.weibo</groupId>
+			<artifactId>weibo4j_oauth2</artifactId>
+			<version>1.0</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<finalName>jianghu-sr</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3.1</version>
+				<configuration>
+					<excludes>
+						<exclude>config.properties.local</exclude>
+						<exclude>config.properties</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<!-- The configuration of the plugin -->
+				<configuration>
+					<!-- Specifies the configuration file of the assembly plugin -->
+					<descriptors>
+						<descriptor>src/main/assembly/assembly.xml</descriptor>
+					</descriptors>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>maven repo</id>
+			<name>maven repo</name>
+			<url>http://repo1.maven.org/maven2/</url>
+		</repository>
+		<repository>
+			<id>morphia</id>
+			<url>http://morphia.googlecode.com/svn/mavenrepo/</url>
+		</repository>
+		<repository>
+			<id>ow2</id>
+			<url>http://maven.ow2.org/maven2/</url>
+		</repository>
+		<repository>
+			<id>apache</id>
+			<url>https://repository.apache.org/content/repositories/releases</url>
+		</repository>
+		<repository>
+			<id>mvnsearch</id>
+			<url>http://www.mvnsearch.org/maven2/</url>
+		</repository>
+		<repository>
+			<id>mfweb</id>
+			<name>mfweb</name>
+			<url>http://mfweb.googlecode.com/svn/repo/</url>
+		</repository>
+	</repositories>
+</project>

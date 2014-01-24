@@ -1,0 +1,327 @@
+#{extends 'main.html' /} 
+#{set title:'Admin User Manager' /}
+<style>
+<!--
+li label {
+	display: block;
+	width: 250px;
+}
+
+ul {
+	list-style: none;
+}
+
+#tablePlaceholder td {
+	width:80px;
+	text-overflow:ellipsis;overflow:hidden;white-space: nowrap;
+}
+#tablePlaceholder.tableTitle {
+	width: 30%;
+}
+#tablePlaceholder {
+	width:100%;
+	table-layout: fixed;
+}
+
+.tdnormal{
+	width:10%;
+}
+.tdshort{
+	width:6%;
+}
+
+#editPanel input {
+	width:80%;
+}
+-->
+</style>
+<div>
+	<div id="searchPanel">
+	<h2>Search User</h2>
+	<ul>
+		<li><label>Id:</label><input type="text" id="searchById" />
+		</li>
+		<li><button id="btnSearchById">search</button>
+		</li>
+	</ul>
+	
+	<ul>
+		<li><label>User Name:</label><input type="text" id="searchByUserName" />
+		</li>
+		</li>
+		<li><button id="btnSearchByConditions">search</button>
+		</li>
+	</ul>
+	</div>
+	<div style="clear: both;"></div>
+	<h3>Searching Result</h3>
+	<div id="searchResult">
+		<table id="tablePlaceholder" border="1">
+		</table>
+		<div id="pagination"></div>
+	</div>
+	
+	<div id="roleEditPanel">
+	<!-- TODO -->
+	</div>
+	
+	<div id="editPanel" >
+		<h2>Create Or Update User</h2>
+		<table border="1">
+			<tr>
+				<th>ID:</th>
+				<td><span id="user_id"></span>
+				</td>
+			</tr>
+			<tr>
+				<th>NAME:</th>
+				<td><input id="user_name" type="text" />
+				</td>
+			</tr>
+			<tr>
+				<th>USERNAME:</th>
+				<td><input id="user_username" type="text" />
+			</td>
+			</tr>
+			<tr>
+				<th>PASSWORD:</th>
+				<td><input id="user_password" type="text" />
+				</td>
+			</tr>
+			<tr>
+				<th>ROLE:</th>
+				<td><input id="user_role_id" type="text"/>
+				</td>
+			</tr>
+			<tr>
+				<td><button id="btnReset">Reset</button>
+				</td>
+				<td><button id="btnSubmit">Submit</button>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+</div>
+<script type="text/javascript">
+	var queryParameters = {};
+	var searchResult;
+	$(function() {
+		$("#btnSearchById").click(function() {
+			clearTableAndPagination();
+			queryParameters = {
+				type : "searchById",
+				begin : 1,
+				max : 20,
+				id : $("#searchById").val()
+			};
+			showMessage("Loading...");
+			$.get("/jianghu-admin-backend/admin/findUser", queryParameters, callback, "json");
+		});
+		
+		
+		$("#btnSearchByConditions").click(function() {
+			clearTableAndPagination();
+			queryParameters = {
+				type : "searchByConditions",
+				begin : 1,
+				max : 20,
+				name : $("#searchByUserName").val()
+			}
+			showMessage("Loading...");
+			$.get("/jianghu-admin-backend/admin/findUser", queryParameters, callback, "json");
+		});
+		$("#btnReset").click(function() {
+			resetEditPanel();
+		});
+		$("#btnSubmit").click(
+				function() {
+					var user = getAndvalidateUser();
+					if (user == null) {
+						return;
+					}
+					showMessage("Waiting...");
+					if (user["user.id"]) {
+						$.post("/jianghu-admin-backend/admin/updateUser", getAndvalidateUser(),
+								updateOrCreateCallback, "json");
+					} else {
+						$.post("/jianghu-admin-backend/admin/createUser", getAndvalidateUser(),
+								updateOrCreateCallback, "json");
+					}
+				});
+	});
+
+	function updateOrCreateCallback(result) {
+		showMessage();
+		try {
+			if (!result || !result.result) {
+				alert("Update or Create Failed")
+			} else {
+				alert("Update or Create Successful")
+			}
+		} catch (e) {
+			alert(e);
+		}
+	}
+
+	function callback(result) {
+		showMessage();
+		try {
+			if (!result || !result.length || result.length == 0) {
+				alert("No Matched User");
+				return;
+			}
+			searchResult = result;
+			buildResultTable(result);
+			buildPagination();
+		} catch (e) {
+			alert(e);
+		}
+	}
+
+	function callback2(result) {
+		showMessage();
+		try {
+			if (!result || !result.length || result.length == 0) {
+				queryParameters.begin = queryParameters == 1 ? 1
+						: (queryParameters.begin - 1);
+				alert("No More User");
+				return;
+			}
+			clearTableAndPagination();
+			searchResult = result;
+			buildResultTable(result);
+			buildPagination();
+		} catch (e) {
+			alert(e);
+		}
+	}
+
+	function getAndvalidateUser() {
+		var user = {};
+		user["user.id"] = $("#user_id").html().trim();
+		user["user.name"] = $("#user_name").val();
+		user["user.username"] = $("#user_username").val();
+		user["user.password"] = $("#user_password").val();
+		user["user.roleIds"] = $("#user_role_id").val();
+		if (!user["user.name"]) {
+			alert("Require User.name");
+			return null;
+		}
+		if (!user["user.username"]) {
+			alert("Require User.username");
+			return null;
+		}
+		return user;
+	}
+
+	function resetEditPanel() {
+		$("#user_id").html("");
+		$("#user_name").val("");
+		$("#user_username").val("");
+		$("#user_password").val("");
+		$("#user_role_id").val("");
+	}
+
+	function clearTableAndPagination() {
+		var table = $("#tablePlaceholder");
+		var pagination = $("#pagination");
+		table.html("");
+		pagination.html("");
+	}
+
+	function buildResultTable(users) {
+		if (!users || !users.length) {
+			return;
+		}
+		var table = $("#tablePlaceholder");
+		var th = "<tr><th class='tdshort'>EDIT</th><th class='tdshort'>ID</th><th class='tdnormal'>NAME</th><th class='tdnormal'>USERNAME</th><th>PASSWORD</th><th class='tdnormal'>ROLE_IDs</th></tr>";
+		table.append(th);
+		for ( var i = 0; i < users.length; i++) {
+			var user = users[i];
+
+
+		var tr = "<tr><td><button class='edit' rowid='" + i +  "'>edit</button><button class='delete' userId='" + user.id + "'>delete</button></td>"
+					+ "<td>"
+					+ user.id
+					+ "</td><td>"
+					+ user.name
+					+ "</td><td>"
+					+ user.username
+					+ "</td><td>"
+					+ user.password
+					+ "</td><td>"
+					+ user.roleIds 
+					+ "</td></tr>";
+			table.append(tr);
+		}
+
+		$(".edit").click(function() {
+			var id = $(this).attr("rowid");
+			buildEditPanel(id);
+		});
+		
+		$(".delete").click(function(){
+			var userId = $(this).attr("userId");
+			$.get("/jianghu-admin-backend/admin/deleteUser",{"userId":userId},updateOrCreateCallback, "json");
+		});
+		
+	}
+
+	function buildEditPanel(id) {
+		if (searchResult && searchResult.length) {
+			var user = searchResult[id];
+			
+			$("#user_id").html(user.id);
+			$("#user_name").val(user.name);
+			$("#user_username").val(user.username);
+			$("#user_password").val(user.password);
+			$("#user_role_id").val(user.roleIds);
+		}
+	};
+
+	function buildPagination() {
+		if (!queryParameters) {
+			return;
+		}
+		var pagination = $("#pagination");
+		var html = "page<input id='currentPage' value='"
+				+ queryParameters.begin
+				+ "'/>&nbsp;&nbsp;&nbsp;<a id='previousPage' href='#'>[previous]</a>&nbsp;&nbsp;&nbsp;<a id='refreshPage' href='#'>[refresh]</a>&nbsp;&nbsp;&nbsp;<a id='nextPage' href='#'>[next]</a>";
+		pagination.append(html);
+		$("#currentPage").keypress(function(event){
+			if(event.which == 13) {
+				queryParameters.begin = $(this).val();
+				
+					showMessage("Loading...");
+					$.get("/jianghu-admin-backend/admin/findUser", queryParameters, callback2,
+							"json");
+				
+			}
+		});
+		$("#previousPage").click(
+				function() {
+					queryParameters.begin = queryParameters.begin == 1 ? 1
+							: (queryParameters.begin - 1);
+					
+						showMessage("Loading...");
+						$.get("/jianghu-admin-backend/admin/findUser", queryParameters, callback2,
+								"json");
+					
+				});
+
+		$("#refreshPage").click(function() {
+				showMessage("Loading...");
+				$.get("/jianghu-admin-backend/admin/findUser", queryParameters, callback2,
+						"json");
+		});
+
+		$("#nextPage").click(function() {
+			queryParameters.begin = queryParameters.begin + 1;
+			
+				showMessage("Loading...");
+				$.get("/jianghu-admin-backend/admin/findUser", queryParameters, callback2,
+						"json");
+		})
+	}
+</script>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Login Failed</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>	
+    </head>
+    <body>
+		#{if play.mode.name() == 'DEV'}
+			#{result /}
+		#{/if}
+        #{else}
+        	<h1>Login Failed</h1>
+			<p>
+				<a href='/Security/index' title='back and retry'>back and retry</a>
+			</p>
+        #{/else}
+    </body>
+</html>

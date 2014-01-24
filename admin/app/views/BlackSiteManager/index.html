@@ -1,0 +1,28 @@
+#{extends 'main.html' /}
+#{set title:'Black Site Manager' /}
+<div id="blackList">
+	<form id="verifyBlackSites" action="@{BlackSiteManager.verifyBlackSites()}" method="post">
+		<table boder="1">
+			<tr>
+				<th>Site</th>
+				<th>&nbsp;</th>
+				<th>Title</th>
+			</tr>
+			#{list items:blackSites, as:'blackSite'}
+			<tr>
+				<td>${blackSite.site}</td>
+				<td><input type ="checkbox" name ="blackSites" checked="true" value ="${blackSite.site}"></input></td>
+				<td><a href="${blackSite.url}" target="blank">${blackSite.title}</a></td>
+			</tr>
+			#{/list}
+		</table>
+		
+		<div>
+			<input type="submit" value="Add to BlackSites"></input>
+		</div>
+	</form>
+</div>
+
+<div id="page">
+	<a href="@{BlackSiteManager.index(nextOffset, 0)}">Next</a>
+</div>

@@ -1,0 +1,7 @@
+mode = development
+
+# mongodb url replset url
+mongodb.url = mongodb://127.0.0.1
+
+#redis host
+redis.hosts = 127.0.0.1

@@ -1,0 +1,48 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /jianghu-admin-backend                               ArticleManage.index
+GET		/jianghu-admin-backend/getArticleByUrl		         ArticleManage.getArticleByUrl
+GET		/jianghu-admin-backend/getArticles		             ArticleManage.getArticles
+GET		/jianghu-admin-backend/testClassifier		         ArticleManage.trainClassifierTest
+GET		/jianghu-admin-backend/trainClassifier				 ArticleManage.trainClassifier
+POST	/jianghu-admin-backend/updateArticle                 ArticleManage.updateArticle			
+POST	/jianghu-admin-backend/createArticle                 ArticleManage.createArticle
+GET     /jianghu-admin-backend/deleteArticle                 ArticleManage.deleteArticle
+POST	/jianghu-admin-backend/markspamArticle				 ArticleManage.markspamArticle
+GET		/jianghu-admin-backend/duplicateArticles			 ArticleManage.getDuplicateArticles
+GET     /jianghu-admin-backend/getTopArticles                ArticleManage.getTopArticles
+
+GET     /jianghu-admin-backend/userManage                    UserManage.index
+GET		/jianghu-admin-backend/findUser		                 UserManage.findUser
+POST	/jianghu-admin-backend/updateUser                    UserManage.update			
+POST	/jianghu-admin-backend/createUser                    UserManage.create
+GET     /jianghu-admin-backend/deleteUser                    UserManage.delete
+
+GET     /jianghu-admin-backend/admin/index                   AdminUserManage.index
+GET		/jianghu-admin-backend/admin/findUser		         AdminUserManage.findUser
+POST	/jianghu-admin-backend/admin/updateUser              AdminUserManage.update			
+POST	/jianghu-admin-backend/admin/createUser              AdminUserManage.create
+GET     /jianghu-admin-backend/admin/deleteUser              AdminUserManage.delete
+
+
+GET     /jianghu-admin-backend/role/index                    RoleManage.index
+GET		/jianghu-admin-backend/role/showAll		             RoleManage.showAll
+GET		/jianghu-admin-backend/role/refresh		             RoleManage.refresh
+POST	/jianghu-admin-backend/role/updateRole               RoleManage.update			
+POST	/jianghu-admin-backend/role/createRole               RoleManage.create
+GET     /jianghu-admin-backend/role/deleteRole               RoleManage.delete
+
+GET     /jianghu-admin-backend/blacksite/index               BlackSiteManager.index
+POST     /jianghu-admin-backend/blacksite/verifyBlackSites   BlackSiteManager.verifyBlackSites
+
+GET     /jianghu-admin-backend/system-message/index          NotificationManage.index
+POST    /jianghu-admin-backend/system-message/sendSystemMessage          NotificationManage.sendSystemMessage
+# Map static resources from the /app/public folder to the /public path
+GET     /jianghu-admin-backend/public/            staticDir:public
+
+
+# Catch all
+*       /{controller}/{action}                  {controller}.{action}

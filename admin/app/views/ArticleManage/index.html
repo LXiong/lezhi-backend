@@ -1,0 +1,569 @@
+#{extends 'main.html' /} #{set title:'Article Manager' /}
+<style>
+<!--
+li label {
+	display: inline-block;
+	width: 250px;
+}
+
+ul {
+	list-style: none;
+}
+
+#tablePlaceholder td {
+	width:80px;
+	text-overflow:ellipsis;overflow:hidden;white-space: nowrap;
+}
+#tablePlaceholder.tableTitle {
+	width: 30%;
+}
+#tablePlaceholder {
+	width:100%;
+	table-layout: fixed;
+}
+
+.tdlarge{
+	width:20%;
+}
+.tdnormal{
+	width:10%;
+}
+.tdshort{
+	width:6%;
+}
+
+#editPanel input {
+	width:80%;
+}
+-->
+</style>
+<div>
+	<div id="searchPanel">
+	<h2>Search Articles</h2>
+	<ul>
+		<li><label>Url:</label><input type="text" id="searchByUrl" />
+		</li>
+		<li><button id="btnSearchByUrl">search</button>
+		</li>
+	</ul>
+	<ul>
+		<li><label>From:</label><input type="text" id="searchByFrom" />
+		</li>
+		<li><label>Date Start(yyyy-MM-dd):</label><input type="text"
+			id="searchByDateStart" />
+		</li>
+		<li><label>Date End(yyyy-MM-dd):</label><input type="text"
+			id="searchByDateEnd" />
+		</li>
+		<li><label>PrefSize:</label><input type="text" id="searchByPrefSize" />
+		</li>
+		<li><label>Category:</label><select id="searchByCategory">
+				<option value="-1"></option>
+			    #{list items:categories, as:'category'}
+				<option value='${category}'>${category}</option> 
+				#{/list}
+		</select>
+		</li>
+		<li><label>Status:</label><select id="searchByStatus">
+				<option value="-1"></option>
+			    #{list items:statuses, as:'status'}
+				<option value='${status}'>${status}</option> 
+				#{/list}
+		</select>
+		</li>
+		<li><label>isTraining:</label><select id="searchByTraining">
+				<option value="-1"></option>
+				<option value='1'>True</option> 
+				<option value='0'>False</option> 
+		</select>
+		</li>
+		<li><button id="btnSearchByConditions">search</button>
+		</li>
+	</ul>
+	<ul>
+		不要乱点！<button id="btnTestClassify">test classify</button>
+		<span id="testClassifyResult"></span>
+	</ul>
+	<ul>
+		不要乱点！<button id="btnTrainClassifier">train classifier</button>
+		<span id="trainClassifierResult"></span>
+	</ul>
+
+	<ul>
+		<li><label>Pop List:</label><select id="searchPOPList">
+			<option value="-1"></option>
+			    #{list items:categories, as:'category'}
+				<option value='${category}'>${category}</option> 
+				#{/list}
+		</select>
+		<input id="btnSearchPOPList" type="button" value="Go!">
+		</li>
+	</ul>	</div>
+	<div style="clear: both;"></div>
+	<h3>Searching Result</h3>
+	<div id="searchResult">
+		<table id="tablePlaceholder" border="1">
+		</table>
+		<div id="pagination"></div>
+	</div>
+	
+	<div id="editPanel" >
+		<h2>Create Or Update Article</h2>
+		<table border="1">
+			<tr>
+				<th>ID:</th>
+				<td><span id="article_id"></span>
+				</td>
+			</tr>
+			<tr>
+				<th>URL:</th>
+				<td><input id="article_url" type="text" />
+				</td>
+			</tr>
+			<tr>
+				<th>SINA_URL:</th>
+				<td><input id="article_sina_url" type="text" />
+			</td>
+			</tr>
+			<tr>
+				<th>Title:</th>
+				<td><input id="article_title" type="text" />
+				</td>
+			</tr>
+			<tr>
+				<th>Content:</th>
+				<td><textarea id="article_content" cols="100" rows="30"></textarea>
+				</td>
+			</tr>
+			<tr>
+				<th>From:</th>
+				<td><input id="article_from" type="text" />
+				</td>
+			</tr>
+			<tr>
+				<th>From-Icon:</th>
+				<td><img id="article_from_icon_img"></img><input type="text"
+					id="article_from_icon" />
+				</td>
+			</tr>
+			<tr>
+				<th>Category:</th>
+				<td><select id="article_category">
+				 #{list items:categories, as:'category' }
+						<option value='${category}'>${category}</option>
+				 #{/list}
+				</select></td>
+			</tr>
+			<tr>
+				<th>Is Training:</th>
+				<td><select id="article_training">
+					<option value=false>false</option>
+					<option value=true>true</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td><button id="btnReset">Reset</button>
+				</td>
+				<td><button id="btnSubmit">Submit</button>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+</div>
+<script type="text/javascript">
+	var selectElem = '<select class="cat">' 
+				 #{list items:categories, as:'category' }
+						+ '<option value="${category}">${category}</option>'
+				 #{/list}
+				'</select>';
+	var selectTraining = '<select class="training">' 
+					+ '<option value=true>true</option>'
+					+ '<option value=false>false</option>'
+				 '</select>';
+
+	var queryParameters = {};
+	var searchResult;
+	$(function() {
+		$("#btnSearchByUrl").click(function() {
+			clearTableAndPagination();
+			queryParameters = {
+				type : "searchByUrl",
+				begin : 1,
+				max : 20,
+				url : $("#searchByUrl").val()
+			};
+			showMessage("Loading...");
+			$.get("/jianghu-admin-backend/getArticleByUrl", queryParameters, callback, "json");
+			$(this).attr("disabled", "disabled");
+		});
+		$("#btnSearchByConditions").click(function() {
+			clearTableAndPagination();
+			queryParameters = {
+				type : "searchByConditions",
+				begin : 1,
+				max : 20,
+				from : $("#searchByFrom").val(),
+				dateStart : $("#searchByDateStart").val(),
+				dateEnd : $("#searchByDateEnd").val(),
+				category : $("#searchByCategory").val(),
+				prefSize: $("#searchByPrefSize").val(),
+				status: $("#searchByStatus").val(),
+				training: $("#searchByTraining").val()
+			};
+			$.get("/jianghu-admin-backend/getArticles", queryParameters, callback, "json");
+			$(this).attr("disabled", "disabled");
+		});
+		$("#btnSearchPOPList").click(function(){
+			clearTableAndPagination();
+			queryParameters = {
+				type:"searchPOPList",
+				begin:1,
+				max:20,
+				category:$("#searchPOPList").val()
+			};
+			showMessage("Loading...");
+			$.get("/jianghu-admin-backend/getTopArticles", queryParameters, callback, "json");
+		    $(this).attr("disabled", "disabled");
+		});
+		$("#btnReset").click(function() {
+			resetEditPanel();
+		});
+		$("#btnSubmit").click(
+			function() {
+				var article = getAndvalidateArticle();
+				if (article == null) {
+					return;
+				}
+				showMessage("Waiting...");
+				if (article["article.id"]) {
+					$.post("/jianghu-admin-backend/updateArticle", getAndvalidateArticle(),
+							updateOrCreateCallback, "json");
+				} else {
+					$.post("/jianghu-admin-backend/createArticle", getAndvalidateArticle(),
+							updateOrCreateCallback, "json");
+				}
+		});
+		$("#btnTestClassify").click(function() {
+			clearTableAndPagination();
+			$.get("/jianghu-admin-backend/testClassifier", queryParameters, testClassifyCallback, "json");
+			$("#testClassifyResult").html("");
+			$(this).attr("disabled", "disabled");
+		});
+		$("#btnTrainClassifier").click(function() {
+			clearTableAndPagination();
+			$.get("/jianghu-admin-backend/trainClassifier", queryParameters, trainClassifierCallback, "json");
+			$("#trainClassifierResult").html("");
+			$(this).attr("disabled", "disabled");
+		});
+	});
+
+	function updateOrCreateCallback(result) {
+		showMessage();
+		try {
+			if (!result || !result.result) {
+				alert("Update Or Create Failed")
+			} else {
+				alert("Update or Create Successful")
+			}
+		} catch (e) {
+			alert(e);
+		}
+	}
+
+	function callback(result) {
+		$("#btnSearchByConditions").attr("disabled", "");
+		$("#btnSearchByUrl").attr("disabled", "");
+		$("#btnSearchPOPList").attr("disabled", "");
+		showMessage();
+		try {
+			if (!result || !result.length || result.length == 0) {
+				alert("No Matched Article");
+				return;
+			}
+			searchResult = result;
+			buildResultTable(result);
+			buildPagination();
+		} catch (e) {
+			alert(e);
+		}
+	}
+
+	function callback2(result) {
+		showMessage();
+		try {
+			if (!result || !result.length || result.length == 0) {
+				queryParameters.begin = queryParameters == 1 ? 1
+						: (queryParameters.begin - 1);
+				alert("No More Article");
+				return;
+			}
+			clearTableAndPagination();
+			searchResult = result;
+			buildResultTable(result);
+			buildPagination();
+		} catch (e) {
+			alert(e);
+		}
+	}
+	
+	function testClassifyCallback(result) {
+		$("#btnTestClassify").attr("disabled", "");
+		showMessage();
+		try {
+			if (result.success) {
+				var c = result.contents;
+				searchResult = c.articles;
+				$("#testClassifyResult").html("Total: " + c.total + ", correct: " 
+						+ c.correct + ", none: " + c.none);
+				buildResultTable(c.articles);
+			} else {
+				$("#testClassifyResult").html("Failed!");
+			}
+		} catch (e) {
+			alert(e);
+		}
+	}
+	
+	function trainClassifierCallback(result) {
+		$("#btnTrainClassifier").attr("disabled", "");
+		showMessage();
+		try {
+			if (result.success) {
+				$("#trainClassifierResult").html("Success!");
+			} else {
+				$("#trainClassifierResult").html("Failed!");
+			}
+
+			buildResultTable(result.articles);
+		} catch (e) {
+			alert(e);
+		}
+	}
+	
+	function getAndvalidateArticle() {
+		var article = {};
+		article["article.id"] = $("#article_id").html().trim();
+		article["article.url"] = $("#article_url").val();
+		article["article.sinaUrl"] = $("#article_sina_url").val();
+		article["article.title"] = $("#article_title").val();
+		article["article.content"] = $("#article_content").val();
+		article["article.from"] = $("#article_from").val();
+		article["article.fromIcon"] = $("#article_from_icon").val();
+		article["article.category"] = $("#article_category").val();
+		article["article.isTraining"] = $("#article_training").val();
+		if (!article["article.url"]) {
+			alert("Require Article.url");
+			return null;
+		}
+		if (!article["article.sinaUrl"]) {
+			alert("Require Article.sinaUrl");
+			return null;
+		}
+		//if (typeof article["article.category"] != "number") {
+		//	article["article.category"] = 0;
+		//}
+		return article;
+	}
+
+	function resetEditPanel() {
+		$("#article_id").html("");
+		$("#article_url").val("");
+		$("#article_sina_url").val("");
+		$("#article_title").val("");
+		$("#article_content").val("");
+		$("#article_from").val("");
+		$("#article_from_icon").val("");
+		$("#article_category").val(0);
+		$("#article_training").val(false);
+	}
+
+	function clearTableAndPagination() {
+		var table = $("#tablePlaceholder");
+		var pagination = $("#pagination");
+		table.html("");
+		pagination.html("");
+	}
+	
+	function getCreateAt(longStr) {
+		var date = new Date(longStr);
+		return date.toString();
+	}
+
+	function buildResultTable(articles) {
+		if (!articles || !articles.length) {
+			return;
+		}
+		var table = $("#tablePlaceholder");
+		var th = "<tr><th class='tdshort'>EDIT</th><th class='tdshort'>ID</th><th class='tdnormal'>TITLE</th><th class='tdshort'>Duplicate</th><th class='tdlarge'>SUMMARY</th><th class='tdnormal'>CATEGORY</th><th class='tdnormal'>TAGS</th><th class='tdshort'>isTraining</th><th class='tdshort'>Score</th><th class='tdnormal'>CREATE TIME</th></tr>";
+		table.append(th);
+		for ( var i = 0; i < articles.length; i++) {
+			var article = articles[i];
+			var tr = "<tr><td><button class='edit' rowid='" + i +  "'>edit</button><button class='delete' articleId='" + article.id + "'>delete</button><button class='markspam' articleId='" + article.id + "'>spam</button></td>"
+					+ "<td>"
+					+ article.id
+					+ "</td><td>"
+					+ "<a target='_blank' href='"
+					+ article.url
+					+ "'>" + article.title + "...</a>"
+					+ "</td><td><button class='duplicate' articleId='" + article.id + "'>Check Duplicate</button></td><td>"
+					+ article.summary
+					+ "</td><td category='"
+					+ article.category + "' rowid='" + i
+					+ "'>"
+					+ selectElem
+					+ "</td><td>" + article.tags
+					+ "</td><td isTraining='"
+					+ article.isTraining + "' rowid='" + i
+					+ "'>"
+					+ selectTraining
+					+ "</td><td>"
+					+ "<input rowid='" + i + "' class='score' value='" + article.score + "'>"
+					+ "</td><td>"
+					+ getCreateAt(article.createAt) + "</td></tr>";
+			table.append(tr);
+		}
+		
+		
+
+		$(".edit").click(function() {
+			var id = $(this).attr("rowid");
+			buildEditPanel(id);
+		});
+		
+		$(".delete").click(function(){
+			var articleId = $(this).attr("articleId");
+			$.get("/jianghu-admin-backend/deleteArticle",{"articleId":articleId},updateOrCreateCallback, "json");
+		});
+		
+		$(".markspam").click(function(){
+			var articleId = $(this).attr("articleId");
+			$.post("/jianghu-admin-backend/markspamArticle",{"articleId":articleId},updateOrCreateCallback, "json");
+		});
+		
+		$(".duplicate").click(function(){
+			var articleId = $(this).attr("articleId");
+			$.get("/jianghu-admin-backend/duplicateArticles",{"articleId":articleId}, callback2, "json");
+		});
+		
+		$(".score").keypress(function(event){
+			if(event.which == 13) {
+				var rowid = $(this).attr("rowid");
+				var value = $(this).val();
+				var article = searchResult[rowid];
+				if (!article) {
+					alert("no exist article");
+				}
+				if (article.score == value) {return;} else {
+					article.score = value;
+				}
+				var params = {};
+				params["article.id"] = article.id;
+				params["article.score"] = article.score;
+				params["article.category"] = article.category;
+				params["article.isTraining"] = article.isTraining;
+				$.post("/jianghu-admin-backend/updateArticle", params, updateOrCreateCallback, "json");
+			}
+		});
+		
+		$(".cat").each(function(){
+			var cat = $(this);
+			cat.val(cat.parent().attr("category"));
+		});
+		
+		$(".training").each(function(){
+			var training = $(this);
+			training.val(training.parent().attr("isTraining"));
+		});
+		
+		$(".cat").change(function(){
+			var rowid = $(this).parent().attr("rowid");
+			var value = $(this).val();
+			if (searchResult && searchResult.length && rowid>=0 && rowid< searchResult.length) {
+				var article = searchResult[rowid];
+				if (article.category == value) {return;}
+				article.category = value;
+				var params = {};
+				params["article.id"] = article.id;
+				params["article.category"] = article.category;
+				params["article.isTraining"] = article.isTraining;
+				$.post("/jianghu-admin-backend/updateArticle", params, updateOrCreateCallback, "json");
+			}
+		});
+		
+		$(".training").change(function(){
+			var rowid = $(this).parent().attr("rowid");
+			var value = $(this).val();
+			if (searchResult && searchResult.length && rowid>=0 && rowid< searchResult.length) {
+				var article = searchResult[rowid];
+				if (article.isTraining == value) {return;}
+				article.isTraining = value;
+				var params = {};
+				params["article.id"] = article.id;
+				params["article.isTraining"] = article.isTraining;
+				params["article.category"] = article.category;
+				$.post("/jianghu-admin-backend/updateArticle", params, updateOrCreateCallback, "json");
+			}
+		});	
+	}
+
+	function buildEditPanel(id) {
+		if (searchResult && searchResult.length) {
+			var article = searchResult[id];
+			$("#article_id").html(article.id);
+			$("#article_url").val(article.url);
+			$("#article_sina_url").val(article.sinaUrl);
+			$("#article_title").val(article.title);
+			$("#article_content").val(article.content);
+			$("#article_from").val(article.from);
+			$("#article_from_icon").val(article.fromIcon);
+			$("#article_from_icon_img").attr("src", article.fromIcon);
+			$("#article_category").val(article.category);
+			$("#article_training").val(article.isTraining);
+		}
+	};
+
+	function buildPagination() {
+		if (!queryParameters) {
+			return;
+		}
+		var pagination = $("#pagination");
+		var html = "page<input id='currentPage' value='"
+				+ queryParameters.begin
+				+ "'/>&nbsp;&nbsp;&nbsp;<a id='previousPage' href='#'>[previous]</a>&nbsp;&nbsp;&nbsp;<a id='refreshPage' href='#'>[refresh]</a>&nbsp;&nbsp;&nbsp;<a id='nextPage' href='#'>[next]</a>";
+		pagination.append(html);
+		$("#currentPage").keypress(function(event){
+			if(event.which == 13) {
+				queryParameters.begin = $(this).val();
+				search();
+			}
+		});
+		$("#previousPage").click(function() {
+			queryParameters.begin = queryParameters.begin == 1 ? 1 : (queryParameters.begin - 1);
+			search();
+		});
+
+		$("#refreshPage").click(function() {
+			search();
+		});
+
+		$("#nextPage").click(function() {
+			queryParameters.begin = queryParameters.begin + 1;
+			search();
+		})
+		
+		function search() {
+			if (queryParameters.type == "searchByUrl") {
+				showMessage("Loading...");
+				$.get("/jianghu-admin-backend/getArticleByUrl", queryParameters, callback2, "json");
+			} else if (queryParameters.type == "searchByConditions") {
+				showMessage("Loading...");
+				$.get("/jianghu-admin-backend/getArticles", queryParameters, callback2, "json");
+			} else {
+				showMessage("Loading...");
+				$.get("/jianghu-admin-backend/getTopArticles", queryParameters, callback2,
+						"json");
+			}
+		}
+	}
+</script>

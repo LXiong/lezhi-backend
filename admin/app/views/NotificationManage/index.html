@@ -1,0 +1,20 @@
+#{extends 'main.html' /} #{set title:'System Message' /}
+<script type="text/javascript">
+    $(function(){
+        function callback(result) {
+            $("#fire").attr("disable","");
+            if (result && result.success) {
+                alert("success!");
+            } else {
+                alert("failed!");
+            }
+        }
+        $("#fire").click(function(){
+            $("#fire").attr("disable","disable");
+            $.post("sendSystemMessage",{message:$("#message").val()},callback,"json");
+        });
+    });
+</script>
+<div>
+    <input id="message" type="text"></input><input type="button" id="fire">Post</input>
+</div>
